@@ -50,7 +50,7 @@ export interface DashboardMetrics {
   expenseByCategorySummary: ExpenseByCategorySummary[];
 }
 
-export interface Users {
+export interface User {
   userId: string;
   name: string;
   email: string;
@@ -59,18 +59,33 @@ export interface Users {
 export const api = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL }),
   reducerPath: "api",
-  tagTypes: ["DashboardMetrics", "Users", "Expenses"],
+  tagTypes: ["DashboardMetrics", "Products", "Users", "Expenses"],
   endpoints: (build) => ({
-    getDashboardMetrics: build.query<Users, void>({
+    getDashboardMetrics: build.query<DashboardMetrics, void>({
       query: () => "/dashboard",
       providesTags: ["DashboardMetrics"],
     }),
-    getUsers: build.query<Users, void>({
-      query: () => "users/get", 
+    getProducts: build.query<Product[], string | void>({
+      query: (search) => ({
+        url: "/products/get",
+        params: search ? { search } : {},
+      }),
+      providesTags: ["Products"],
+    }),
+    createProduct: build.mutation<Product, NewProduct>({
+      query: (newProduct) => ({
+        url: "/products/create",
+        method: "POST",
+        body: newProduct,
+      }),
+      invalidatesTags: ["Products"],
+    }),
+    getUsers: build.query<User[], void>({
+      query: () => "/users/get",
       providesTags: ["Users"],
     }),
-    getExpensesByCategory: build.query<ExpenseByCategorySummary, void>({
-      query: () => "expenses",
+    getExpensesByCategory: build.query<ExpenseByCategorySummary[], void>({
+      query: () => "/expenses",
       providesTags: ["Expenses"],
     }),
   }),
@@ -78,6 +93,8 @@ export const api = createApi({
 
 export const {
   useGetDashboardMetricsQuery,
+  useGetProductsQuery,
+  useCreateProductMutation,
   useGetUsersQuery,
   useGetExpensesByCategoryQuery,
 } = api;
